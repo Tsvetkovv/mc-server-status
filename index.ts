@@ -90,7 +90,7 @@ function parseTelegramMessageForServerUrl(msg: TelegramBot.Message) {
 
 function isMinecraftServerAvailable(
   serverUrl: string,
-  host: string,
+   host: string,
   port: number | undefined,
 ) {
   return new Promise<boolean>((resolve, reject) => {
