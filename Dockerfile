@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 25565
 
-CMD [ "npm", "start" ]
+ENTRYPOINT ["/entrypoint.sh"]

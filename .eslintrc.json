@@ -29,6 +29,8 @@
     "import/prefer-default-export": "off",
     "no-restricted-syntax": "off",
     "no-underscore-dangle": "off",
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": "error",
     "prefer-arrow-callback": "off",
     "prettier/prettier": [
       "error",

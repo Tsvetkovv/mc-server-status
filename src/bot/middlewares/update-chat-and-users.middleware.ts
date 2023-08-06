@@ -34,7 +34,11 @@ export const updateChatAndUsers = (): Middleware<Context> => {
       const { chat, from } = message;
       const chatDto: Prisma.ChatCreateInput = {
         id: chat.id,
-        type: chat.type,
+        type: {
+          connect: {
+            name: chat.type,
+          },
+        },
       };
       queries.push(
         prisma.chat.upsert({

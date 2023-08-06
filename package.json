@@ -11,7 +11,10 @@
     "format": "eslint \"src/**/*.ts\" --fix",
     "test": "vitest",
     "test:update-snapshots": "vitest --update",
-    "postinstall": "prisma generate",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "prisma generate",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:migrate": "prisma migrate dev",
     "prepare": "npx husky install"
   },
   "author": "",
@@ -80,6 +83,6 @@
     "*.ts": "npm run lint"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "tsc -t es2022 -m es2022 --moduleResolution node --noEmit prisma/seed.ts"
   }
 }

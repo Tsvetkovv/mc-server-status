@@ -52,7 +52,7 @@ export const CONFIG = {
   userMockId: "00000000-0000-0000-0000-000000000000", // Getting this ID from server if user is logging in
   thresholdToShowOfflinePlayersMs: 24 * 60 * 60_000,
   cache: {
-    filePath: path.join(process.cwd(), "store-cache.json"),
+    filePath: path.join(process.cwd(), "data", "store-cache.json"),
     intervalMs: 60_000,
   },
 };

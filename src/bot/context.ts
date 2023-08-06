@@ -13,7 +13,7 @@ import { McStore } from "~/mc-store";
 
 type ScopeUser = Omit<
   UserPayload<PrismaClientX["$extends"]["extArgs"]>["scalars"],
-  "updatedAt" | "createdAt" | "chatId"
+  "updatedAt" | "createdAt" | "chatId" | "roleName"
 >;
 
 export interface ContextScope {

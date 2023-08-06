@@ -1,52 +1,82 @@
-import { Prisma, Role } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { PrismaClientX } from "~/prisma";
+import { Role } from "~/prisma/role";
 
-export default Prisma.defineExtension({
-  name: "user",
-  result: {
-    user: {
-      isAdmin: {
-        needs: { role: true },
-        compute(user) {
-          return user.role === Role.ADMIN;
+export default Prisma.defineExtension((client) => {
+  return client.$extends({
+    name: "user",
+    result: {
+      user: {
+        isAdmin: {
+          needs: { roleName: true },
+          compute(user) {
+            return user.roleName === Role.admin;
+          },
         },
-      },
 
-      isOwner: {
-        needs: { role: true },
-        compute(user) {
-          return user.role === Role.OWNER;
+        isOwner: {
+          needs: { roleName: true },
+          compute(user) {
+            return user.roleName === Role.owner;
+          },
         },
       },
     },
-  },
-  model: {
-    user: {
-      byTelegramId(telegramId: number) {
-        return {
-          telegramId,
-        } satisfies Prisma.UserWhereInput;
-      },
+    model: {
+      user: {
+        upsert(user: { telegramId: number; languageCode?: string }) {
+          return client.user.upsert({
+            where: { telegramId: user.telegramId },
+            create: {
+              telegramId: user.telegramId,
+              languageCode: user.languageCode,
+              roleName: Role.user,
+            },
+            update: {},
+            select: {
+              id: true,
+              telegramId: true,
+              languageCode: true,
+              ...Prisma.getExtensionContext(this).withRoles(),
+            },
+          });
+        },
+        addOwner(telegramId: number) {
+          return client.user.upsert({
+            where: { telegramId },
+            create: {
+              telegramId,
+              roleName: Role.owner,
+            },
+            update: {},
+          });
+        },
+        byTelegramId(telegramId: number) {
+          return {
+            telegramId,
+          } satisfies Prisma.UserWhereInput;
+        },
 
-      hasAdminRole() {
-        return {
-          role: Role.ADMIN,
-        } satisfies Prisma.UserWhereInput;
-      },
+        hasAdminRole() {
+          return {
+            roleName: Role.admin,
+          } satisfies Prisma.UserWhereInput;
+        },
 
-      hasOwnerRole() {
-        return {
-          role: Role.OWNER,
-        } satisfies Prisma.UserWhereInput;
-      },
+        hasOwnerRole() {
+          return {
+            roleName: Role.owner,
+          } satisfies Prisma.UserWhereInput;
+        },
 
-      withRoles() {
-        return {
-          role: true,
-          isAdmin: true,
-          isOwner: true,
-        } satisfies Prisma.UserSelect<PrismaClientX["$extends"]["extArgs"]>;
+        withRoles() {
+          return {
+            roleName: true,
+            isAdmin: true,
+            isOwner: true,
+          } satisfies Prisma.UserSelect<PrismaClientX["$extends"]["extArgs"]>;
+        },
       },
     },
-  },
+  });
 });

@@ -1,6 +1,5 @@
 #!/usr/bin/env tsx
 
-import { Role } from "@prisma/client";
 import { onShutdown } from "node-graceful-shutdown";
 import { createBot } from "~/bot";
 import { createAppContainer } from "~/container";
@@ -45,16 +44,7 @@ try {
   await prisma.$connect();
 
   // update bot owner role
-  await prisma.user.upsert({
-    where: { telegramId: config.BOT_ADMIN_USER_ID },
-    create: {
-      telegramId: config.BOT_ADMIN_USER_ID,
-      role: Role.OWNER,
-    },
-    update: {
-      role: Role.OWNER,
-    },
-  });
+  await prisma.user.addOwner(config.BOT_ADMIN_USER_ID);
 
   // TODO refactor
   const onServerUpdate = async (

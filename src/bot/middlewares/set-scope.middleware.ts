@@ -7,18 +7,8 @@ export function setScope(): Middleware<Context> {
       const { id: telegramId, language_code: languageCode } = ctx.from;
 
       ctx.scope.user = await ctx.prisma.user.upsert({
-        where: ctx.prisma.user.byTelegramId(telegramId),
-        create: {
-          telegramId,
-          languageCode,
-        },
-        update: {},
-        select: {
-          id: true,
-          telegramId: true,
-          languageCode: true,
-          ...ctx.prisma.user.withRoles(),
-        },
+        telegramId,
+        languageCode,
       });
     }
 

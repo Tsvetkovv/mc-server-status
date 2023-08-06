@@ -1,5 +1,4 @@
 import { chatAction } from "@grammyjs/auto-chat-action";
-import { Role } from "@prisma/client";
 import { Composer, Keyboard } from "grammy";
 import { or } from "grammy-guard";
 import _ from "lodash";
@@ -15,14 +14,16 @@ import { userRequests } from "~/bot/helpers/user-requests";
 import { i18n, isMultipleLocales } from "~/bot/i18n";
 import { isAdminUser } from "~/bot/filters/is-admin-user.filter";
 import { isOwnerUser } from "~/bot/filters/is-owner-user.filter";
+import { ChatType } from "~/prisma/chat-type";
+import { Role } from "~/prisma/role";
 
 const composer = new Composer<Context>();
 
 const feature = composer
-  .chatType("private")
+  .chatType(ChatType.private)
   .filter(or(isOwnerUser, isAdminUser));
 
-const featureForOwner = composer.chatType("private").filter(isOwnerUser);
+const featureForOwner = composer.chatType(ChatType.private).filter(isOwnerUser);
 
 featureForOwner.command("admin", logHandle("command-admin"), (ctx) =>
   ctx.reply(ctx.t("admin.select-user"), {
@@ -64,7 +65,7 @@ featureForOwner.filter(
     user = await ctx.prisma.user.update({
       where: ctx.prisma.user.byTelegramId(userId),
       data: {
-        role: user.role === Role.ADMIN ? Role.USER : Role.ADMIN,
+        roleName: user.isAdmin ? Role.user : Role.admin,
       },
       select: {
         id: true,
@@ -76,7 +77,7 @@ featureForOwner.filter(
     const notifyOwner = ctx.reply(
       ctx.t("admin.user-role-changed", {
         id: user.id,
-        role: user.role,
+        role: user.roleName,
       }),
       {
         reply_markup: {
@@ -88,7 +89,7 @@ featureForOwner.filter(
     const notifyUser = ctx.api.sendMessage(
       userId,
       ctx.t("admin.your-role-changed", {
-        role: user.role,
+        role: user.roleName,
       }),
     );
 
