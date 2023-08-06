@@ -1,5 +1,25 @@
 {
   "compilerOptions": {
-    "strict": true
-  }
+    "baseUrl": "src",
+    "esModuleInterop": true,
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "~/*": [
+        "*"
+      ]
+    },
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2021",
+    "types": [
+      "vitest/globals"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "prisma/seed.ts",
+    "vitest.config.ts",
+  ]
 }
