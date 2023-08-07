@@ -44,7 +44,10 @@ try {
   await prisma.$connect();
 
   // update bot owner role
-  await prisma.user.addOwner(config.BOT_ADMIN_USER_ID);
+  if (config.BOT_ADMIN_USER_ID) {
+    await prisma.user.addOwner(config.BOT_ADMIN_USER_ID);
+    logger.info(`Assigned ${config.BOT_ADMIN_USER_ID} as bot owner`);
+  }
 
   // TODO refactor
   const onServerUpdate = async (

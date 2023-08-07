@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  mcserverstatus:
+    container_name: mcserverstatus
+    image: "path-to-image" # fill me
+    restart: unless-stopped
+    env_file:
+      - mcserverstatus.env # don't forget to create this file
+    volumes:
+      - ./mcserverstatus/data:/data
+
+  # skip it if you use SQLite
+  postgres:
+    container_name: postgres
+    image: postgres:15-alpine
+    ports:
+      - '5432:5432'
+    env_file:
+      - .postgres.env
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    restart: unless-stopped

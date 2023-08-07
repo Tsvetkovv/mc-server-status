@@ -24,7 +24,7 @@ const configSchema = z.object({
   ),
   BOT_TOKEN: z.string(),
   BOT_WEBHOOK: z.string().url().optional(),
-  BOT_ADMIN_USER_ID: z.coerce.number().finite(),
+  BOT_ADMIN_USER_ID: z.coerce.number().finite().optional(),
   SENTRY_DSN: z.string().optional(),
 });
 
