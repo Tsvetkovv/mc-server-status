@@ -8,7 +8,7 @@ services:
     env_file:
       - mcserverstatus.env # don't forget to create this file
     volumes:
-      - ./mcserverstatus/data:/data
+      - ./mcserverstatus/data:/usr/src/app/data
 
   # skip it if you use SQLite
   postgres:
