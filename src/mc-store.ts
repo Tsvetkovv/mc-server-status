@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import { CONFIG } from "~/config";
 import { McServer } from "./models/mc-server";
 import { formatUrl } from "./utils/format-url";
 import { parseUrl } from "./utils/parse-url";
@@ -26,7 +28,7 @@ export class McStore {
 
   get(url: string, chatId: number) {
     const { host, port } = parseUrl(url);
-    return Array.from(this.servers.values()).find(
+    return [...this.servers.values()].find(
       (s) =>
         s.host === host &&
         s.port === port &&
@@ -36,9 +38,9 @@ export class McStore {
 
   getAll(chatId?: number) {
     if (!chatId) {
-      return Array.from(this.servers.values());
+      return [...this.servers.values()];
     }
-    return Array.from(this.servers.values()).filter((s) =>
+    return [...this.servers.values()].filter((s) =>
       s.chats.some((c) => c.chatId === chatId),
     );
   }
@@ -49,14 +51,29 @@ export class McStore {
   }
 
   serialize() {
-    return JSON.stringify(Array.from(this.servers));
+    return JSON.stringify([...this.servers]);
   }
 
   deserialize(data: string) {
-    try {
-      this.servers = new Map(JSON.parse(data));
-    } catch (err) {
-      console.warn(err);
-    }
+    this.servers = new Map(JSON.parse(data));
   }
+
+  // TODO clarify what it was extracted to separate function
+  cache() {
+    fs.writeFileSync(CONFIG.cache.filePath, this.serialize(), {
+      encoding: "utf8",
+    });
+  }
+}
+
+export function createMcStore() {
+  const mcStore = new McStore();
+  if (fs.existsSync(CONFIG.cache.filePath)) {
+    mcStore.deserialize(
+      fs.readFileSync(CONFIG.cache.filePath, {
+        encoding: "utf8",
+      }),
+    );
+  }
+  return mcStore;
 }

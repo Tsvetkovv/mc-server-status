@@ -1,0 +1,67 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["metrics"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  telegramId   BigInt   @unique @map("telegram_id")
+  languageCode String?  @map("language_code")
+  role         Role     @relation(fields: [roleName], references: [name])
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  chats        Chat[]
+  roleName     String
+
+  @@map(name: "users")
+}
+
+model Chat {
+  id           BigInt       @id
+  type         ChatType     @relation(fields: [chatTypeName], references: [name])
+  createdAt    DateTime     @default(now())
+  users        User[]
+  botMessage   BotMessage[]
+  chatTypeName String
+
+  @@map(name: "chats")
+}
+
+model BotMessage {
+  messageId  BigInt
+  date       DateTime  @default(now())
+  editedDate DateTime?
+  pinned     Boolean   @default(false)
+  text       String?
+  botId      BigInt
+  chat       Chat      @relation(fields: [chatId], references: [id])
+  chatId     BigInt
+
+  @@unique([messageId, chatId])
+  @@map(name: "botMessages")
+}
+
+// Lookup tables since SQLite connector does not support enums
+model Role {
+  name  String @id @unique
+  users User[]
+}
+
+model ChatType {
+  name  String @id @unique
+  chats Chat[]
+}
+
+// Lookup tables end

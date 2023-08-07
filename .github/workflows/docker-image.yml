@@ -1,7 +1,8 @@
 on:
   push:
-    branches:
-      - 'master'
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 env:
   REGISTRY: docker.io
   IMAGE_NAME: mc-server-status
@@ -19,8 +20,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+      - name: Build and push Versioned Docker Image
         uses: docker/build-push-action@v4
+        if: ${{ github.ref != 'refs/heads/master' }}
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Build and push Latest Docker Image
+        uses: docker/build-push-action@v4
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           push: true
           platforms: linux/amd64,linux/arm64

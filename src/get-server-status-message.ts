@@ -1,15 +1,16 @@
 import {
+  differenceInMilliseconds,
   formatDistance,
   formatDistanceToNow,
-  differenceInMilliseconds,
 } from "date-fns";
+import { escapeMessage } from "~/utils/escape-message";
 import { CONFIG } from "./config";
 import { McServer, PlayerStatus } from "./models/mc-server";
 import { formatUrl } from "./utils/format-url";
 import { getYearMonthHash } from "./parse-server-status";
 
 function formatPlayerStatus(player: PlayerStatus) {
-  if (player.isOnline) return `🟢${player.name}`;
+  if (player.isOnline) return `🟢 ${escapeMessage(player.name)}`;
   const formattedDuration = formatDistance(
     new Date(player.lastOnline),
     new Date(),
@@ -17,7 +18,7 @@ function formatPlayerStatus(player: PlayerStatus) {
       addSuffix: true,
     },
   );
-  return `⚪${player.name} ~ ${formattedDuration}`;
+  return `⚪ ${escapeMessage(player.name)} ~ ${formattedDuration}`;
 }
 
 function comparePlayers(a: PlayerStatus, b: PlayerStatus): number {
@@ -29,17 +30,18 @@ function comparePlayers(a: PlayerStatus, b: PlayerStatus): number {
 }
 
 function getOnlineSection(online: PlayerStatus[]) {
-  return online.slice().sort(comparePlayers).map(formatPlayerStatus).join("\n");
+  return [...online].sort(comparePlayers).map(formatPlayerStatus).join("\n");
 }
 
 function getOfflineSection(offline: PlayerStatus[]) {
-  return offline
-    .slice()
-    .filter(
-      (p) =>
-        Math.abs(differenceInMilliseconds(new Date(p.lastOnline), new Date())) <
-        CONFIG.thresholdToShowOfflinePlayersMs,
-    )
+  return [...offline]
+    .filter((p) => {
+      const diffInMilliseconds = differenceInMilliseconds(
+        new Date(),
+        new Date(p.lastOnline),
+      );
+      return diffInMilliseconds < CONFIG.thresholdToShowOfflinePlayersMs;
+    })
     .sort(comparePlayers)
     .map(formatPlayerStatus)
     .join("\n");
@@ -51,6 +53,7 @@ function getPlayerListSection(server: McServer, showMaxOffline = 30) {
     .filter((p) => !p.isOnline)
     .slice(0, Math.max(0, showMaxOffline - online.length));
   return `${[
+    // TODO i18n
     [
       server.hasError ? "🛑" : "",
       `*${formatUrl(server)}*`,
@@ -74,34 +77,40 @@ export function getPlayersStat(
 ) {
   const currentYearMonth = getYearMonthHash();
   const medals = ["🥇", "🥈", "🥉"];
-  return players
-    .map((player) => ({
-      player,
-      online:
-        (isAllTime
-          ? Object.values(player.onlineByMonth).reduce((sum, v) => sum + v, 0)
-          : player.onlineByMonth[currentYearMonth]) || 0,
-    }))
-    .sort((a, b) => b.online - a.online)
-    .slice(0, count)
-    .map(
-      (p, idx) =>
-        `${medals[idx] || ` *${idx + 1}.* `} ${
-          p.player.name
-        } ~ ${formatDistanceToNow(new Date(Date.now() - p.online))}`,
-    )
-    .join("\n");
+  return (
+    players
+      .map((player) => ({
+        player,
+        online:
+          (isAllTime
+            ? Object.values(player.onlineByMonth).reduce((sum, v) => sum + v, 0)
+            : player.onlineByMonth[currentYearMonth]) || 0,
+      }))
+      .sort((a, b) => b.online - a.online)
+      .slice(0, count)
+      // TODO i18n pass locale to formatDistanceToNow
+      .map((p, index) => {
+        const medal = `${medals[index] || ` *${index + 1}.* `}`;
+        const playerName = escapeMessage(p.player.name);
+        const time = formatDistanceToNow(new Date(Date.now() - p.online));
+        return `${medal} ${playerName} ~ ${time}`;
+      })
+      .join("\n")
+  );
 }
 
 export function getPlayersStatSection(server: McServer) {
-  return server.players.length
-    ? ["*Top 3 online this month*", getPlayersStat(server.players)].join("\n")
-    : null;
+  return server.players.length > 0
+    ? // TODO i18n
+      ["*Top 3 online this month*", getPlayersStat(server.players)].join("\n")
+    : undefined;
 }
 
 export function getServerStatusMessage(server: McServer) {
   if (!server) return "";
-  return [getPlayerListSection(server), getPlayersStatSection(server)]
-    .filter((v) => v !== null)
+  const playerListSection = getPlayerListSection(server);
+  const playersStatSection = getPlayersStatSection(server);
+  return [playerListSection, playersStatSection]
+    .filter((v) => v !== undefined)
     .join("\n\n");
 }

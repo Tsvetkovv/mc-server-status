@@ -1,13 +1,19 @@
-FROM node:18.16.1-alpine as node
+FROM node:18-alpine as node
 
 WORKDIR /usr/src/app
 
+# Files required by npm install
 COPY package*.json ./
+# Files required by prisma
+COPY prisma ./prisma
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 25565
 
-CMD [ "npm", "start" ]
+ENTRYPOINT ["/entrypoint.sh"]

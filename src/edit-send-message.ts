@@ -1,44 +1,60 @@
-import * as TelegramBot from "node-telegram-bot-api";
-import { Message } from "node-telegram-bot-api";
+import type { Bot } from "~/bot";
+import { Message } from "@grammyjs/types";
+import { Container } from "~/container";
 
 export async function editSendMessage(
-  bot: TelegramBot,
+  bot: Bot,
+  container: Container,
   chatId: number,
   text: string,
   messageId?: number,
-): Promise<Message | null> {
+): Promise<Message | undefined> {
   if (messageId) {
     try {
-      const message = await bot.editMessageText(text, {
-        parse_mode: "Markdown",
-        chat_id: chatId,
-        message_id: messageId,
-      });
+      const message = await bot.api.editMessageText(chatId, messageId, text);
       if (typeof message === "object") {
         return message;
       }
-    } catch (err) {
-      console.warn("can't edit message", { chatId, messageId, text }, err);
+    } catch (error) {
+      container.logger.info(`can't edit message ${JSON.stringify(error)}`);
     }
   }
   if (messageId) {
     try {
-      await bot.deleteMessage(chatId, messageId);
-    } catch (err) {
-      console.error(`can't delete message`, { chatId, messageId }, err);
+      await bot.api.deleteMessage(chatId, messageId);
+    } catch (error) {
+      container.logger.info(`can't delete message: ${JSON.stringify(error)}`);
     }
   }
+  const message = await bot.api.sendMessage(chatId, text, {
+    disable_notification: true,
+  });
+  let pinned = false;
   try {
-    const newMessage = await bot.sendMessage(chatId, text, {
-      disable_notification: true,
-      parse_mode: "Markdown",
-    });
-    await bot.pinChatMessage(chatId, newMessage.message_id, {
+    await bot.api.pinChatMessage(chatId, message.message_id, {
       disable_notification: true,
     });
-    return newMessage;
-  } catch (err) {
-    console.warn(`Error: `, { chatId, text }, err);
+    pinned = true;
+  } catch (error) {
+    container.logger.info(`can't pin message ${JSON.stringify(error)}`);
   }
-  return null;
+
+  await container.prisma.botMessage.upsert({
+    where: {
+      messageId_chatId: {
+        messageId: message.message_id,
+        chatId: message.chat.id,
+      },
+    },
+    create: {
+      messageId: message.message_id,
+      chatId: message.chat.id,
+      text: message.text,
+      botId: bot.botInfo.id,
+      date: new Date(message.date * 1000),
+      pinned,
+    },
+    update: {},
+  });
+  return message;
 }
