@@ -83,6 +83,6 @@
     "*.ts": "npm run lint"
   },
   "prisma": {
-    "seed": "tsc -t es2022 -m es2022 --moduleResolution node --noEmit prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   }
 }

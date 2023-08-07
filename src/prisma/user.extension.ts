@@ -24,8 +24,11 @@ export default Prisma.defineExtension((client) => {
     },
     model: {
       user: {
-        upsert(user: { telegramId: number; languageCode?: string }) {
-          return client.user.upsert({
+        upsertByTelegramId(user: {
+          telegramId: number;
+          languageCode?: string;
+        }) {
+          return Prisma.getExtensionContext(this).upsert({
             where: { telegramId: user.telegramId },
             create: {
               telegramId: user.telegramId,
