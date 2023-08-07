@@ -12,6 +12,9 @@ Directory `data` contains database files. Make sure you mount it in order to per
 - `npm run prisma:studio` - open DB Explorer (Prisma Studio). It will be available on http://localhost:5555.
 - `npm run prisma:migrate` - run in order to create DB schema migration. It will create a new script in `./prisma/migrations` that will be executed on production DB after deployment.
 
+## Deployment
+Deployment via docker. See example of docker=compose file [docker-compose.yml](docker-compose.yml).
+
 ## Environment variables
 Validation located in the file [config.ts](src/config.ts). Refer to [.example.env](.example.env) for examples. Only 3 variables are required.
 
